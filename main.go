@@ -4,6 +4,7 @@ import (
 	"BattleCoderServer/client"
 	"fmt"
 	"net"
+	"time"
 )
 
 const host = "localhost:3000"
@@ -24,20 +25,27 @@ func listen() {
 
 //接続してきたクライアントに対する処理
 func clientProcess(conn net.Conn) {
+
 	logger := client.Logger{RemoteAdderName: conn.RemoteAddr().String()}
 	logger.PrintLn("接続")
 	buf := make([]byte, 4*1024)
+	defer conn.Close()
+	defer logger.PrintLn("接続終了")
 	for {
-		_, err := conn.Read(buf)
+		readBuf, err := read(conn, buf)
 		if err != nil {
-			conn.Close()
-			logger.PrintLn("接続終了")
 			return
 		}
-		bufSliced := sliceBuf(buf)
-		conn.Write(bufSliced)
-		logger.PrintLn("受信:" + string(bufSliced))
+		conn.Write(readBuf)
+		logger.PrintLn("受信:" + string(readBuf))
 	}
+}
+
+func read(conn net.Conn, buf []byte) ([]byte, error) {
+	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+	_, err := conn.Read(buf)
+	bufSliced := sliceBuf(buf)
+	return bufSliced, err
 }
 
 func sliceBuf(buf []byte) []byte {
