@@ -37,7 +37,10 @@ func clientProcess(conn net.Conn) {
 			return
 		}
 		conn.Write(readBuf)
-		logger.PrintLn("受信:" + string(readBuf))
+		readStr := string(readBuf)
+		if readStr[:len(readStr)-1] != "empty" {
+			logger.PrintLn("受信:" + readStr)
+		}
 	}
 }
 
@@ -55,7 +58,7 @@ func sliceBuf(buf []byte) []byte {
 func getBufEndIndex(buf []byte) int {
 	for index, b := range buf {
 		if b == 0 {
-			return index
+			return index + 1
 		}
 	}
 	return len(buf)
