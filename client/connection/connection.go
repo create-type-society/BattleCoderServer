@@ -72,8 +72,8 @@ func (t *ClientConnection) clientProcess() {
 	go func() {
 		defer t.close()
 		for {
-			t.conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 			writeBuf := <-t.writeChannel
+			t.conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 			_, err2 := t.conn.Write(writeBuf)
 			if err2 != nil {
 				return
