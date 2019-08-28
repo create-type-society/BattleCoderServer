@@ -7,7 +7,7 @@ import (
 	"net"
 )
 
-const host = "localhost:3000"
+const host = "0.0.0.0:3000"
 
 func main() {
 	listen()
