@@ -27,7 +27,7 @@ func NewMatchWaitingClient(clientConnection connection.ClientConnection) *MatchW
 func (t *MatchWaitingClient) Match(other *MatchWaitingClient) {
 	t.matched = true
 	other.matched = true
-	t.clientConnection.WriteChannel <- []byte("match_client\000")
-	other.clientConnection.WriteChannel <- []byte("match_host\000")
-	NewMatchPairClient(t.clientConnection, other.clientConnection)
+	t.clientConnection.WriteChannel <- []byte("match_client\n")
+	other.clientConnection.WriteChannel <- []byte("match_host\n")
+	NewMatchPairClient(&t.clientConnection, &other.clientConnection)
 }

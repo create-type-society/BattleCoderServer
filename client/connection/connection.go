@@ -2,6 +2,7 @@ package connection
 
 import (
 	"BattleCoderServer/client/connection/logger"
+	"bufio"
 	"net"
 	"time"
 )
@@ -17,6 +18,8 @@ type ClientConnection struct {
 	finishedChannel chan bool
 	FinishedChannel <-chan bool
 	isFinished      bool
+	reader          *bufio.Reader
+	writer          *bufio.Writer
 }
 
 // NewClientConnection はClientConnectionを生成します
@@ -36,6 +39,8 @@ func NewClientConnection(conn net.Conn) ClientConnection {
 		finishedChannel: finishedChannel,
 		FinishedChannel: finishedChannel,
 		isFinished:      false,
+		writer:          bufio.NewWriter(conn),
+		reader:          bufio.NewReader(conn),
 	}
 	go clientConnection.clientProcess()
 	return clientConnection
@@ -51,58 +56,37 @@ func (t *ClientConnection) close() {
 //接続してきたクライアントに対する処理
 func (t *ClientConnection) clientProcess() {
 
-	buf := make([]byte, 4*1024)
-
 	go func() {
 		defer t.close()
 		for {
-			readBuf, err := read(t.conn, buf)
+			t.conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+			readBuf, err := t.reader.ReadBytes('\n')
 			if err != nil {
 				return
 			}
-
 			readStr := string(readBuf)
-			if readStr[:len(readStr)-1] != "empty" {
+			if readStr != "empty\n" {
 				t.logger.PrintLn("受信:" + readStr)
 				t.readChannel <- readBuf
+			} else {
+				t.writeChannel <- readBuf
 			}
-		}
-	}()
 
-	go func() {
-		defer t.close()
-		for {
 			writeBuf := <-t.writeChannel
 			t.conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
-			_, err2 := t.conn.Write(writeBuf)
+			_, err2 := t.writer.Write(writeBuf)
+			t.writer.Flush()
 			if err2 != nil {
 				return
 			}
-			t.logger.PrintLn("送信:" + string(writeBuf))
+			writeStr := string(writeBuf)
+			if writeStr != "empty\n" {
+				t.logger.PrintLn("送信:" + writeStr)
+			}
 		}
 	}()
 
 	<-t.finishedChannel
 	t.conn.Close()
 	t.logger.PrintLn("接続終了")
-}
-
-func read(conn net.Conn, buf []byte) ([]byte, error) {
-	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-	_, err := conn.Read(buf)
-	bufSliced := sliceBuf(buf)
-	return bufSliced, err
-}
-
-func sliceBuf(buf []byte) []byte {
-	return buf[:getBufEndIndex(buf)]
-}
-
-func getBufEndIndex(buf []byte) int {
-	for index, b := range buf {
-		if b == 0 {
-			return index + 1
-		}
-	}
-	return len(buf)
 }

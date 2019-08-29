@@ -5,8 +5,8 @@ import (
 )
 
 func NewMatchPairClient(
-	clientConnection1 connection.ClientConnection,
-	clientConnection2 connection.ClientConnection) {
+	clientConnection1 *connection.ClientConnection,
+	clientConnection2 *connection.ClientConnection) {
 
 	finished := false
 
