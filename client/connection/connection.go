@@ -66,12 +66,15 @@ func (t *ClientConnection) clientProcess() {
 			}
 			readStr := string(readBuf)
 			if readStr != "empty\n" {
-				t.logger.PrintLn("受信:" + readStr)
+				t.logger.Print("受信:" + readStr)
 				t.readChannel <- readBuf
-			} else {
-				t.writeChannel <- readBuf
 			}
+		}
+	}()
 
+	go func() {
+		defer t.close()
+		for {
 			writeBuf := <-t.writeChannel
 			t.conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 			_, err2 := t.writer.Write(writeBuf)
@@ -80,9 +83,7 @@ func (t *ClientConnection) clientProcess() {
 				return
 			}
 			writeStr := string(writeBuf)
-			if writeStr != "empty\n" {
-				t.logger.PrintLn("送信:" + writeStr)
-			}
+			t.logger.Print("送信:" + writeStr)
 		}
 	}()
 

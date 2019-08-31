@@ -11,3 +11,8 @@ type Logger struct {
 func (t Logger) PrintLn(s string) {
 	fmt.Println("[" + t.RemoteAdderName + "] " + s)
 }
+
+// Print は関連しているRemoteAdderNameのログを表示します
+func (t Logger) Print(s string) {
+	fmt.Print("[" + t.RemoteAdderName + "] " + s)
+}
