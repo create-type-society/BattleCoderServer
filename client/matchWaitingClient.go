@@ -15,11 +15,6 @@ func NewMatchWaitingClient(clientConnection connection.ClientConnection) *MatchW
 	matchWaitingClient := &MatchWaitingClient{
 		clientConnection: clientConnection,
 		matched:          false}
-	go func() {
-		for matchWaitingClient.matched == false {
-			<-matchWaitingClient.clientConnection.ReadChannel
-		}
-	}()
 	return matchWaitingClient
 }
 
