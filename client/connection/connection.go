@@ -65,8 +65,8 @@ func (t *ClientConnection) clientProcess() {
 				return
 			}
 			readStr := string(readBuf)
+			t.logger.Print("受信:" + readStr)
 			if readStr != "empty\n" {
-				t.logger.Print("受信:" + readStr)
 				t.readChannel <- readBuf
 			}
 		}
